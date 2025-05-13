@@ -4,7 +4,7 @@
     <Filter Include="Note">
       <UniqueIdentifier>{99d24669-f8f9-466b-99cc-29751ff895d4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件">
+    <Filter Include="Src">
       <UniqueIdentifier>{50c040ad-269e-4e9f-a64a-00f819be8b0c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -15,10 +15,13 @@
     <Text Include="Note\字符串.txt">
       <Filter>Note</Filter>
     </Text>
+    <Text Include="cpp初始文本.txt">
+      <Filter>Note</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\test.cpp">
-      <Filter>源文件</Filter>
+      <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

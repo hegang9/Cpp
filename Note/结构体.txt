@@ -1,0 +1,61 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+struct Student {
+	string name;
+	int age;
+};
+
+union Num {
+	int i_val;
+	double d_val;
+};
+
+struct People {
+	union {	//匿名共用体
+		int i_val;
+		double d_val;	//这两个变量的地址相同
+	};
+};
+
+enum E { red=1, green=4, black=6, yellow=7 };
+
+int main()
+{
+	Student student = { "hegang",20 };
+	Student student1{ "xiaoming",40 };
+	Student student2{};
+	cout << student.name << endl;
+	cout << student1.age << endl;
+	cout << student2.name << endl;//空初始化所有变量均为“0”
+
+	student2 = student;
+	cout << student2.name << " " << student2.age << endl;	//结构之间赋值，所有变量的值都会复制
+
+	Student array[3] = { student,student1,student2 };
+	for (Student& item: array) {
+		cout << item.name << " " << item.age << endl;
+	}
+
+	Num num;
+	num.d_val = 1.2;
+	num.i_val = 1;
+	cout << num.i_val << endl;
+	cout << num.d_val << endl;
+	
+	E band;
+	band = red;
+	//band = 0;错误，在不进行强制类型转换时，只能将枚举量赋值给枚举变量
+
+	int color_num = red;	//枚举量可以提升为int，但int只能通过强制类型转换下降至枚举量
+	cout << band << endl << color_num << endl;
+
+	E band1;
+	band1 = E(5);
+	cout << band1 << endl;
+	band1 = E(100);	//超出枚举合法范围，属于未定义行为，但是不会报错
+	cout << band1 << endl;
+
+	return 0;
+}

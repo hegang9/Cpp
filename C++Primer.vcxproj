@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Text Include="cpp初始文本.txt" />
     <Text Include="Note\字符串.txt" />
     <Text Include="Note\结构体.txt" />
   </ItemGroup>
