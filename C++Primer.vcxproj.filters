@@ -18,6 +18,9 @@
     <Text Include="cpp初始文本.txt">
       <Filter>Note</Filter>
     </Text>
+    <Text Include="指针.txt">
+      <Filter>Note</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\test.cpp">
