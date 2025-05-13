@@ -17,7 +17,7 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Note\test.cpp">
+    <ClCompile Include="Src\test.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

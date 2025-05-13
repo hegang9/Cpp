@@ -131,7 +131,7 @@
     <Text Include="Note\结构体.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Note\test.cpp" />
+    <ClCompile Include="Src\test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
