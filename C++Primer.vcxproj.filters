@@ -21,6 +21,9 @@
     <Text Include="指针.txt">
       <Filter>Note</Filter>
     </Text>
+    <Text Include="Note\循环和关系表达式.txt">
+      <Filter>Note</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\test.cpp">
