@@ -1,0 +1,59 @@
+﻿#include <iostream>
+#include <string>
+using namespace std;
+
+
+int main()
+{
+	int* p1, p2;	//这里p1是指针，p2是int型变量，对每个指针变量名在声明时都要在其之前加一个*
+
+	int a=1;
+	int* pt = &a;	//指针初始化,栈中分配内存
+	cout << pt << endl;
+
+	pt = (int*)0xB8000000;	//将整数地址赋值给指针需要进行强制类型转换
+	cout << pt << endl;	
+
+	//使用new来分配内存
+	int* pt_1 = new int;	//new将找到一个内存块并返回内存块的地址，堆中分配内存
+	*pt_1 = 100;
+	delete pt_1;	//释放pt_1指向的内存，但是不会删除pt_1指针，相当于将pt_1指针恢复到只声明没赋值的状态，后续还可以让pt_1指向一个新的内存块
+	pt_1 = &a;	//pt与pt_1指向同一个内存块，输出结果也相同
+	cout << pt_1 << endl;
+
+	//delete pt;	不能使用delete释放由声明变量分配的内存
+	//delete pt_1;	//这里释放的是pt_1和pt的公共内存，也就是说pt指向的内存也被释放了
+
+	//delete pt_1;	//不能对已经释放过的内存再次释放
+
+	//使用new创建动态数组
+	int* pt_2 = new int[2];
+	pt_2[0] = 1;
+	pt_2[1] = 2;
+	//数组表示法：
+	cout << pt_2[0] << endl;	
+	cout << pt_2[1] << endl;
+
+	//指针表示法
+	pt_2 += 1;
+	cout << *pt_2 << endl;
+
+	//delete[] pt_2;  new[] 在分配数组时，编译器会额外存储数组长度的元数据（通常位于数组起始地址之前）
+	//当调用 delete[] 时，系统需要根据该元数据确定需要释放的内存范围。如果指针不指向首元素，将无法正确获取元数据，导致未定义行为（如内存泄漏或程序崩溃）
+	pt_2 -= 1;
+	cout << sizeof(pt_2) << endl;	//输出指针长度，64位架构为8，32位架构为4
+	//将sizeof作用与常规数组名，会返回整个数组占用的字节长度
+	delete[] pt_2;
+
+	char flower[5] = "rose";
+	cout << flower << endl;	//输出的是字符串rose
+	//cout 对 char* 的特殊处理​：
+	//当 cout 接收到 char* 类型的指针时，会将其视为 ​C风格字符串的首地址，并输出从该地址开始的所有字符，直到遇到空终止符
+
+	int te[2] = { 0,1 };
+	cout << te << endl;//输出的是一个地址
+
+	//使用new创建动态结构
+	//使用->访问结构成员
+	return 0;
+}
