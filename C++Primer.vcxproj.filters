@@ -27,6 +27,9 @@
     <Text Include="Note\文件读写操作.txt">
       <Filter>Note</Filter>
     </Text>
+    <Text Include="Note\函数.txt">
+      <Filter>Note</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\test.cpp">
