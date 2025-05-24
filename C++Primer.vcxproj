@@ -128,6 +128,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="cpp初始文本.txt" />
+    <Text Include="Note\内存模型和名称空间.txt" />
     <Text Include="Note\函数.txt" />
     <Text Include="Note\字符串.txt" />
     <Text Include="Note\循环和关系表达式.txt" />
