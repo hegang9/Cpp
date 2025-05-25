@@ -134,6 +134,7 @@
     <Text Include="Note\循环和关系表达式.txt" />
     <Text Include="Note\指针.txt" />
     <Text Include="Note\文件读写操作.txt" />
+    <Text Include="Note\类.txt" />
     <Text Include="Note\结构体.txt" />
   </ItemGroup>
   <ItemGroup>

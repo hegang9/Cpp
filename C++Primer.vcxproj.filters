@@ -33,6 +33,9 @@
     <Text Include="Note\内存模型和名称空间.txt">
       <Filter>Note</Filter>
     </Text>
+    <Text Include="Note\类.txt">
+      <Filter>Note</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\test.cpp">
