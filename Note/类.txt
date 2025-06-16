@@ -1,0 +1,219 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+
+class Student
+{
+private:
+	//在类中定义常量的方法：
+	enum { Month = 12 };
+	static const int month = 12;//不能在类声明中初始化静态数据成员的一种例外情况：静态数据成员为整型const或枚举型const；否则类中声明的静态数据成员需要在类外（实现文件中）进行初始化。
+	static int mm;
+
+	//作用域内枚举：(注意：与传统枚举量不同，作用域内枚举量不能隐式转换为整型)
+	enum class egg{small,large};
+	enum class Tshirt{small,large};
+
+public:
+	int age;
+	int* data;
+	Student operator+(const Student& a) const;	//重载+操作符，重载函数可以不设置为成员函数
+
+	//通过让函数成为类的友元，可以赋予该函数与类的成员函数相同的访问权限
+	friend ostream& getAge(ostream& os,const Student& a);
+	//使用友元函数对操作符进行重载，可以打破第一个操作数必须是类对象的限制
+	friend Student operator+(int a, const Student& s);
+
+	Student();
+	Student(int age);
+	virtual ~Student();
+	Student(const Student& s);//每当程序生成了对象副本时，编译器都将使用复制构造函数
+	//默认的复制构造函数逐个复制非静态成员（成员复制也称为浅复制），复制的是成员的值，即浅拷贝。
+
+	//复制构造函数与自动重载的赋值运算符的区别：
+	/*
+	复制构造函数：
+	作用 ：用于创建一个新对象，并初始化它为已有对象的副本。
+	调用时机 ：当创建一个新对象并用已有对象进行初始化时，例如按值传递对象、按值返回对象、对象初始化等情况。
+
+	赋值运算符：
+	作用 ：用于将一个已有对象的值赋给另一个已存在的同类型对象。
+	调用时机 ：当对已存在的对象进行赋值操作时，例如对象之间的显式赋值
+	*/
+
+	//默认重载的赋值运算符是浅拷贝
+	//显式重载赋值运算符（改为深拷贝）
+	Student& operator=(const Student& other);
+
+	//静态成员函数不能使用this指针。
+	//如果静态成员函数是在公有部分声明的，则可以使用类名和作用域解析运算符来调用它。
+	//静态成员函数不与特定的对象相关联，因此只能使用静态数据成员
+	static int getMonth();
+
+
+	void print();
+	virtual void print_vir();
+
+};
+
+int Student::mm = 0;//类外初始化
+
+Student Student::operator+(const Student& a) const
+{
+	Student sum;
+	sum.age = this->age + a.age;
+	return sum;
+}
+
+Student::Student()
+{
+}
+
+Student::Student(int age)
+{
+	this->age = age;
+}
+
+Student::~Student()
+{
+}
+
+Student::Student(const Student& s)
+{
+}
+
+Student& Student::operator=(const Student& other)
+{
+	if (this != &other) { // 防止自赋值
+		delete data; // 释放原有资源
+		data = new int(*other.data);
+	}
+	return *this;
+}
+
+int Student::getMonth()
+{
+	return month;
+}
+
+void Student::print()
+{
+	cout << "基类打印函数调用（非虚函数）" << endl;
+}
+
+void Student::print_vir()
+{
+	cout << "基类虚打印函数调用" << endl;
+}
+
+//友元函数不属于成员函数，不需要使用Student::修饰
+//Student Student::operator+(int a, Student& s)
+//{
+//
+//}
+
+Student operator+(int a, const Student& s)
+{
+	Student sum;
+	sum.age = a * s.age;
+	return sum;
+}
+
+//友元函数的定义不要加frend修饰
+ostream& getAge(ostream& os, const Student& a)
+{
+	os << a.age << endl;
+	return os;
+}
+
+
+//重载运算符的限制：1、操作符的操作数至少有一个为用户自定义类型 2、从操作符必须遵循原来的句法规则和优先级
+/*
+不能重载的操作符：
+sizeof：sizeof运算符。
+.：成员运算符。
+. *：成员指针运算符。
+::：作用域解析运算符。
+?:：条件运算符。
+typeid：一个RTTI运算符。
+const_cast：强制类型转换运算符。
+dynamic_cast：强制类型转换运算符。
+reinterpret_cast：强制类型转换运算符。
+static_cast：强制类型转换运算符。
+*/
+
+//类继承：
+/*
+基类指针可以在不进行显式类型转换的情况下指向派生类对象；基类引用可以在不进行显式类型转换的情况下引用派生类对象，反之不行。然而，基类指针或引用只能用于调用基类方法，不能调用派生类方法
+
+公有派生：
+使用公有派生，基类的公有成员将成为派生类的公有成员；基类的私有部分也将成为派生类的一部分，派生类不能直接访问基类的私有成员，但只能通过基类的公有和保护方法访问
+派生类不能直接访问基类的私有成员，而必须通过基类方法进行访问。派生类构造函数必须使用基类构造函数
+
+如果没有使用关键字virtual，程序将根据引用类型或指针类型选择方法；如果使用了virtual，程序将根据引用或指针指向的对象的类型来选择方法
+
+基类声明虚析构函数是为了确保释放派生对象时，按正确的顺序调用析构函数。这是一个惯例
+
+构造函数不能是虚函数,析构函数应当是虚函数，除非类不用做基类。友元不能是虚函数，因为友元不是类成员
+
+重新定义继承的方法并不是重载。如果在派生类中重新定义函数，将不是使用相同的函数特征标覆盖基类声明，而是隐藏同名的基类方法，不管参数特征标如何
+
+这引出了两条经验规则：
+第一，如果重新定义继承的方法，应确保与原来的原型完全相同，但如果返回类型是基类引用或指针，则可以修改为指向派生类的引用或指针（这种例外是新出现的）
+第二，如果基类声明被重载了，则应在派生类中重新定义所有的基类版本。如果只重新定义一个版本，则其他的版本将被隐藏，派生类对象将无法使用它们
+
+三种继承方式详解：https://blog.csdn.net/a924282761/article/details/124352983
+*/
+
+class hg :public Student
+{
+private:
+	string name;
+public:
+	hg(string name, int age);
+	void print();
+	virtual void print_vir();
+};
+
+
+hg::hg(string name, int age):Student(age)
+{
+	this->name = name;
+}
+
+void hg::print()
+{
+	cout << "派生类打印函数调用" << endl;
+}
+
+void hg::print_vir()
+{
+	cout << "派生类虚打印函数调用" << endl;
+}
+
+/*
+抽象基类：只定义接口，而不涉及实现，主要用于定义派生类的通用接口。抽象基类必须包含至少一个纯虚方法。且包含纯虚函数的抽象基类，不能用来创建对象，只能用作基类。
+实现方法：函数声明的结尾处添加 =0，以表示此函数为纯虚函数。在当前类可不用给出实现
+*/
+
+class vir
+{
+public:
+	virtual void print() = 0;
+};
+
+int main()
+{
+	//两种调用+运算符的方法：
+	Student s;
+	Student t;
+	Student sum = s + t;
+	Student sum1 = s.operator+(t);
+
+	hg me("hegang",20);
+	Student& father = me;
+	father.print();
+	father.print_vir();
+	return 0;
+}
