@@ -1,0 +1,32 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+//第一种方式：宏定义（只在预编译阶段进行文本替换，无类型检查，在连续声明时可能发生错误）
+//格式：#define (你想要的别名） （原名字）
+//用法1：对象式
+#define PI 3.14159
+//用法2：模拟函数行为（警惕使用）
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+
+//第二种方式：typedef（在编译阶段为已有类型别名，支持类型检查，受类/命名空间作用域限制）
+//格式：typedef （原名字） （你想要的别名）
+typedef int integer;
+typedef struct { int x;int y; } point;
+
+
+//第三种方式(C++11开始使用)：using（模板友好，在编译阶段为已有类型别名，支持类型检查，受类/命名空间作用域限制）
+//格式：using （你想要的别名）=（原名字）
+using IntPtr = int*;
+
+int main()
+{
+	cout << "PI=" << PI << endl;
+	integer max = MAX(1, 2);
+	cout << "max=" << max << endl;
+	point p{ 1,2 };
+	cout << p.x << p.y << endl;
+
+	return 0;
+}
