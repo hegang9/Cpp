@@ -39,6 +39,12 @@
     <Text Include="Note\取别名.txt">
       <Filter>Note</Filter>
     </Text>
+    <Text Include="Note\const特性.txt">
+      <Filter>Note</Filter>
+    </Text>
+    <Text Include="Note\virtual特性.txt">
+      <Filter>Note</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\test.cpp">
