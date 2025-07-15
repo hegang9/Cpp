@@ -45,6 +45,9 @@
     <Text Include="Note\virtual特性.txt">
       <Filter>Note</Filter>
     </Text>
+    <Text Include="Note\强制类型转换.txt">
+      <Filter>Note</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\test.cpp">
