@@ -1,0 +1,118 @@
+#include <iostream>
+#include <string>
+#include <memory>   //智能指针头文件
+using namespace std;
+
+/*
+智能指针简介：
+智能指针是C++11引入的一种特殊的指针类型，用于自动管理动态分配的内存（在堆中分配的内存）。它们可以帮助防止内存泄漏和悬空指针等问题。
+C++标准库提供了三种主要的智能指针类型：`std::unique_ptr`、`std::shared_ptr`和`std::weak_ptr`。
+在现代 C++ 中，原始指针仅用于范围有限的小代码块、循环或者性能至关重要且不会混淆所有权的 Helper 函数中。
+
+unique_ptr
+不共享它的指针。 它无法复制到其他 unique_ptr，无法通过值传递到函数，也无法用于需要副本的任何 C++ 标准库算法。 只能移动 unique_ptr。 
+这意味着，内存资源所有权将转移到另一 unique_ptr，并且原始 unique_ptr 不再拥有此资源。
+与 boost::scoped_ptr 比较，unique_ptr 小巧高效；大小等同于一个指针且支持 rvalue 引用，从而可实现快速插入和对 C++ 标准库集合的检索。
+
+shared_ptr
+采用引用计数的智能指针。 如果你想要将一个原始指针分配给多个所有者（例如，从容器返回了指针副本又想保留原始指针时），请使用该指针。
+在您初始化一个 shared_ptr 之后，您可复制它，按值将其传入函数参数，然后将其分配给其他 shared_ptr 实例。 
+所有实例均指向同一个对象，并共享对一个“控制块”（每当新的 shared_ptr 添加、超出范围或重置时增加和减少引用计数）的访问权限。
+直至所有 shared_ptr 所有者超出了范围或放弃所有权，才会删除原始指针。 
+大小为两个指针；一个用于对象，另一个用于包含引用计数的共享控制块。
+
+weak_ptr
+结合 shared_ptr 使用的特例智能指针。 
+weak_ptr 提供对一个或多个 shared_ptr 实例拥有的对象的访问，但不参与引用计数。 
+如果你想要观察某个对象但不需要其保持活动状态，请使用该实例。 在某些情况下，需要断开 shared_ptr 实例间的循环引用。 
+通过使用 weak_ptr，可以创建一个联接到现有相关实例集的 shared_ptr，但前提是基础内存资源仍然有效。 weak_ptr 本身不参与引用计数，因此，它无法阻止引用计数变为零。 
+但是，可以使用 weak_ptr 尝试获取初始化该副本的 shared_ptr 的新副本。 
+若已删除内存，则 weak_ptr 的 bool 运算符返回 false。 若内存仍然有效，则新的共享指针会递增引用计数，并保证只要 shared_ptr 变量保留在作用域内，内存就会有效。
+*/
+
+
+// C++11智能指针示例
+class LargeObject
+{
+public:
+    void DoSomething() {}
+};
+
+void ProcessLargeObject(const LargeObject& lo) {}
+
+void SmartPointerDemo()
+{
+    // Create the object and pass it to a smart pointer
+    std::unique_ptr<LargeObject> pLarge(new LargeObject());
+
+    // Call a method on the object
+    pLarge->DoSomething();
+
+    // Pass a reference to a method.
+    ProcessLargeObject(*pLarge);
+
+	ProcessLargeObject(*(pLarge.get())); // 使用 get() 方法获取原始指针
+
+    pLarge.reset();// 释放指针所有权，可以添加参数，参数为需要指向的新对象，智能指针具有通过使用“点”表示法访问的成员函数，例如一些 C++ 标准库智能指针具有释放指针所有权的重置成员函数
+} 
+
+/*
+使用智能指针的注意事项:
+1. 智能指针的生命周期：智能指针的生命周期通常与其作用域相关。当智能指针超出作用域时，它所管理的对象会被自动销毁；
+2. 智能指针的类型选择：根据需要选择合适的智能指针类型。`std::unique_ptr`用于独占所有权，`std::shared_ptr`用于共享所有权，而`std::weak_ptr`用于避免循环引用；
+3. 循环引用：使用`std::shared_ptr`时要小心循环引用问题，这可能导致内存泄漏。可以使用`std::weak_ptr`来打破循环引用；
+4. 性能：智能指针通常比原始指针稍慢，因为它们需要额外的开销来管理内存，但它们提供了更安全的内存管理；
+5. 始终在单独的代码行上创建智能指针，而绝不在参数列表中创建，这样做可以防止泄露资源；
+6. 不要对智能指针本身使用new或malloc表达式；
+7. 在堆栈上声明了智能指针，当智能指针超出范围时将调用其析构函数，尽管堆栈上的某处将进一步引发异常。
+*/
+
+
+//创建并使用unique_ptr
+void use_unique_ptr()
+{
+    //第一种创建方法
+	auto uniquePtr = make_unique<LargeObject>(new LargeObject()); // 使用make_unique创建unique_ptr，避免使用new关键字
+	// make_unique是C++14引入的，推荐使用它来创建unique_ptr
+    uniquePtr->DoSomething();
+
+	//第二种创建方法
+	std::unique_ptr<LargeObject> anotherPtr = std::move(uniquePtr); // 转移所有权,转移后，uniquePtr成为nullptr
+    // uniquePtr在函数结束时自动释放
+
+	auto arr = make_unique<int[]>(10); // 创建一个包含10个整数的unique_ptr数组
+}
+//创建并使用shared_ptr
+void use_shared_ptr()
+{
+    //第一种创建方法
+    auto sharedPtr = make_shared<LargeObject>(new LargeObject()); // 使用make_shared创建shared_ptr，避免使用new关键字
+    // make_shared是C++14引入的，推荐使用它来创建shared_ptr
+    sharedPtr->DoSomething();
+    //第二种创建方法
+    std::shared_ptr<LargeObject> anotherSharedPtr = sharedPtr; // 共享所有权
+    // anotherSharedPtr和sharedPtr指向同一个对象
+    //第三种创建方法
+    std::shared_ptr<LargeObject> thirdSharedPtr(new LargeObject()); // 使用new关键字创建shared_ptr，但不推荐
+
+    //使用dynamic_pointer_cast、static_pointer_cast 和 const_pointer_cast 来转换 shared_ptr
+	std::shared_ptr<int> intPtr = std::make_shared<int>(42);
+    std::shared_ptr<double> doublePtr = std::static_pointer_cast<double>(intPtr); // 将int类型转换为double类型
+    // 注意：static_pointer_cast转换可能会导致运行时错误，因为int和double的内存布局不同
+	std::shared_ptr<const int> constIntPtr = std::const_pointer_cast<const int>(intPtr); // 将int类型转换为const int类型
+    // 注意：const_pointer_cast只用于去除const修饰符，不能改变对象的类型
+	std::shared_ptr<int> dynamicIntPtr = std::dynamic_pointer_cast<int>(intPtr); // 将int类型转换为int类型
+	// 注意：dynamic_pointer_cast用于多态类型的转换，如果类型不匹配，将返回nullptr
+}
+
+//创建并使用weak_ptr
+void use_weak_ptr()
+{
+    auto sharedPtr = make_shared<LargeObject>(new LargeObject()); // 创建一个shared_ptr
+    std::weak_ptr<LargeObject> weakPtr(sharedPtr); // 创建一个weak_ptr，指向shared_ptr所管理的对象
+    if (auto lockedPtr = weakPtr.lock()) { // 尝试获取shared_ptr
+        lockedPtr->DoSomething(); // 如果成功，使用lockedPtr访问对象
+    } else {
+        std::cout << "Weak pointer is expired." << std::endl; // 如果失败，表示shared_ptr已被销毁
+    }
+}

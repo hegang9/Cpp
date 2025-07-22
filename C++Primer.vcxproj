@@ -134,6 +134,7 @@
     <Text Include="Note\函数.txt" />
     <Text Include="Note\取别名.txt" />
     <Text Include="Note\字符串.txt" />
+    <Text Include="Note\对象管理类和智能指针.txt" />
     <Text Include="Note\强制类型转换.txt" />
     <Text Include="Note\循环和关系表达式.txt" />
     <Text Include="Note\指针.txt" />
