@@ -1,0 +1,44 @@
+#include <iostream>
+#include <string>
+#include <cstdlib> // 添加此头文件以正确声明malloc和free
+using namespace std;
+
+/*
+malloc函数介绍：
+malloc函数是C/C++标准库中的一个内存分配函数，用于动态分配指定大小的内存块。它的原型通常定义在头文件<stdlib.h>或<cstdlib>中。
+malloc 会返回指向已分配空间的 void 指针，如果可用内存不足，则返回 NULL。若要返回指向类型而非 void 的指针，需要在返回值上使用类型转换。
+如果 size 为 0，则 malloc 在堆中分配零长度的项并向该项返回有效的指针。
+malloc 函数分配至少为 size 个字节的内存块。 由于对齐和维护信息所需的空间，该块可能大于 size 个字节。
+*/
+
+/*
+malloc与new的区别：
+malloc/free不允许重载，new/delete允许重载。
+malloc/free是C语言的内存分配函数，new/delete是C++的内存分配运算符。
+new/delete会调用构造函数和析构函数，而malloc/free不会。
+new从自由存储区分配内存，而malloc从堆中分配内存。自由存储区通常以堆为基础，但它是一个更高级的概念，允许定制。
+*/
+
+//malloc/free使用示例：
+void example_malloc_free()
+{
+	int* arr = (int*)malloc(10 * sizeof(int)); // 分配10个整数的内存
+	if (arr == nullptr) {
+		cerr << "Memory allocation failed!" << endl;
+		return;
+	}
+	for (int i = 0; i < 10; ++i) {
+		arr[i] = i * 10; // 初始化数组
+	}
+	for (int i = 0; i < 10; ++i) {
+		cout << arr[i] << " "; // 输出数组内容
+	}
+	cout << endl;
+	free(arr); // 释放内存
+}
+
+int main()
+{
+	example_malloc_free();
+	return 0;
+}

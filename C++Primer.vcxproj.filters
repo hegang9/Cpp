@@ -51,6 +51,9 @@
     <Text Include="Note\对象管理类和智能指针.txt">
       <Filter>Note</Filter>
     </Text>
+    <Text Include="Note\malloc与new.txt">
+      <Filter>Note</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\test.cpp">
