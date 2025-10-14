@@ -365,7 +365,7 @@ FodyWeavers.xsd
 # VSCode C# Extension
 .vscode/
 
-.sln
-.vcxproj
-.vcxproj.filters
-.exe
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.exe
