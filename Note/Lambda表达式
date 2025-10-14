@@ -1,0 +1,86 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+/*
+Lambda完整语法：
+[capture](parameters) mutable -> return_type { body }
+
+[capture]: 捕获列表，指定如何捕获外部变量
+parameters: 参数列表（可选）
+mutable: 允许修改按值捕获的变量（可选）
+-> return_type: 返回类型（可选，编译器可推导）
+{ body }: 函数体
+
+捕获方式：
+[]: 不捕获任何变量
+[=]: 按值捕获所有外部变量
+[&]: 按引用捕获所有外部变量
+[this]: 捕获当前对象的this指针
+[a, &b]: 按值捕获a，按引用捕获b
+[=, &a]: 按值捕获所有变量，但按引用捕获a
+[&, a]: 按引用捕获所有变量，但按值捕获a
+
+底层实现原理：
+Lambda表达式在编译时被转换为一个匿名的函数对象类（functor）。所以Lambda表达式实际上是一个函数对象类的实例。
+
+// Lambda表达式
+auto lambda = [x, &y](int a) { return x + y + a; };
+
+// 编译器大致生成如下类
+class __lambda_unique_name {
+private:
+    int x;      // 按值捕获
+    int& y;     // 按引用捕获
+public:
+    __lambda_unique_name(int _x, int& _y) : x(_x), y(_y) {}
+    
+    auto operator()(int a) const {
+        return x + y + a;
+    }
+};
+
+注意事项：
+默认情况下operator()是const的,函数内部不能修改按值捕获的变量,如果需要修改,需要在捕获列表后加mutable关键字，例如
+	int x=10;
+	auto p=[x](int a) mutable -> int
+	{
+		x+=1; // 允许修改x
+		return x+a;
+	};
+但是这里的const只针对按值捕获的变量，对于传入的变量（如参数a）和按引用捕获的变量（如y）不受影响。
+
+若使用的是GCC编译器，可以直接使用lambda.x访问类成员，但一般不推荐使用
+
+下面代码运行结果均为60，x、y均按值捕获，只是在lambda函数对应的类对象初始化时被拷贝了一次，之后无论如何修改x、y均不会影响lambda函数体内的值。
+	int x=10;
+	int y=20;
+	auto p=[x,y](int a) -> int
+	{
+		return x+y+a;
+	};
+	cout<<p(30)<<endl; 
+	x+=1;
+	cout<<p(30)<<endl;
+	return 0;
+
+this永远是按引用捕获的
+
+新标准：
+在C++14标准之后，引入了泛型Lambda，允许使用auto作为参数类型，例如：
+	auto p=[](auto a, auto b) { return a + b; };
+*/
+
+int main()
+{
+	int x=10;
+	int y=20;
+	auto p=[x,y](auto a) mutable -> int
+	{
+		x++;
+		return x+y+a;
+	};
+	cout<<p(30)<<endl; 
+	cout<<p(30)<<endl;
+	return 0;
+}
