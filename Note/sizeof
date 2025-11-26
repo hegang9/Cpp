@@ -1,0 +1,40 @@
+sizeof是在编译期计算的运算符，注意是运算符不是函数，不会产生运行时代码
+
+基本用法：
+sizeof(int)等基本类型
+sizeof(x)获取基本类型变量x的类型大小
+sizeof(arr)固定长度数组占用的总字节数
+sizeof(int*)获取指针类型的大小，与操作系统有关，与指向的类型无关
+
+进阶用法：
+sizeof(func())获取函数返回值类型的大小
+sizeof(ref)获取引用类型的大小，等同于引用所指向的类型大小
+sizeof(EmptyClass)空类的大小为1字节，确保每个实例有唯一地址
+sizeof(struct)结构体大小包含对齐填充,可能大于各成员大小之和
+sizeof(class)类大小包含对齐填充和虚函数表指针（如果有虚函数），可能大于各成员大小之和
+
+扩展用法1：模板元编程
+template <typename T>
+struct TypeSize
+{
+    static constexpr size_t value = sizeof(T);
+}
+常用于编译期断言，内存池分配
+
+扩展用法2：条件编译
+#if sizeof(void*) == 8
+    // 64位系统代码
+#else
+    // 32位系统代码
+#endif
+
+局限性：
+1、无法取得动态数组（堆上分配）的大小，只能获取指针大小：
+int* arr = new int[10];
+sizeof(arr);         // 8字节（指针大小），而非40字节
+
+2、无法取得不完整类型（如前向声明类）的大小
+3、不能用于通过传参进函数中的数组，因为会退化为指针：
+void func(int arr[]) {
+    sizeof(arr);     // 8字节（数组退化为指针）
+}
