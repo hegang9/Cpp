@@ -11,6 +11,7 @@ push_back 和 emplace_back的区别：
 2、性能开销：push_back可能会进行临时对象的构造和销毁，引入时间开销，特别是在对象构造和析构成本较高时，所以时间性能：emplace_back > push_back
 3、特殊性质：emplace_back能够完美转发参数，这意味着参数的值类别（左值、右值）会被保留，这对于需要区分处理左值和右值的构造函数特别有用。
 
+
 vector常用的成员函数：
 iterator begin() noexcept; 返回指向容器第一个元素的迭代器
 iterator end() noexcept; 返回指向容器最后一个元素之后位置的迭代器
