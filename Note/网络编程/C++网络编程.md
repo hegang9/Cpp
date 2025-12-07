@@ -129,7 +129,18 @@ MSG_OOB：同上，用于接收带外数据
 
 - 关闭 socket：通信结束后关闭连接。
 ```
+close()(Linux)
+closesocket()(Windows) 
+```
 
+#### 客户端额外操作
+- 发起连接
+```
+struct sockaddr_in serv_addr;
+serv_addr.sin_family = AF_INET;
+serv_addr.sin_port = htons(8080);
+inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr); // 将字符串IP转换为二进制形式
+connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 ```
 
 ![alt text](TCP连接.png) 
