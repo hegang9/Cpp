@@ -1,21 +1,17 @@
 ﻿#include <iostream>
 #include <string>
+#include <vector>
+#include <algorithm>
 using namespace std;
-char *GetMemory2(void)
-{
-	char p[] = "hello world";
-	return p;
-}
-
-void Test2(void)
-{
-	char *str = NULL;
-	str = GetMemory2();
-	printf(str);
-}
 
 int main()
 {
-	Test2();
+	vector<int> numbers{1, 2, 3, 4, 5};
+	sort(numbers.rbegin(), numbers.rend());
+	for (const auto &num : numbers)
+	{
+		cout << num << " ";
+	}
+	cout << endl;
 	return 0;
 }

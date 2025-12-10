@@ -54,7 +54,7 @@ public:
 
 下面代码运行结果均为60，x、y均按值捕获，只是在lambda函数对应的类对象初始化时被拷贝了一次，之后无论如何修改x、y均不会影响lambda函数体内的值。
 	int x=10;
-	int y=20;
+	int y=20; 
 	auto p=[x,y](int a) -> int
 	{
 		return x+y+a;
