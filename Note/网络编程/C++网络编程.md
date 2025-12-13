@@ -1,7 +1,7 @@
 ### 在 C++ 中使用TCP sockets进行网络通信的核心步骤：
 #### 服务器端
 - 创建socket：调用socket()创建流式套接字，这个套接字用于监听客户端的连接请求，称为监听套接字
-```
+```c
 #include <sys/socket.h>
 int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -26,7 +26,7 @@ SOCK_RAW：原始套接字，允许对底层协议（如 IP 或 ICMP）进行直
 protocol（具体协议）：通常设置为 0，表示根据 domain和 type自动选择默认协议（如 SOCK_STREAM默认 TCP，SOCK_DGRAM默认 UDP）。也可显式指定，如 IPPROTO_TCP、IPPROTO_UDP或 IPPROTO_ICMP（用于原始套接字）
 ```
 - 绑定地址：通过bind()将 socket 与 IP 地址和端口绑定。
-```
+```c
 struct sockaddr_in serv_addr;
 serv_addr.sin_family = AF_INET;
 serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // 绑定本机所有IP
@@ -58,7 +58,7 @@ struct in_addr {
 addrlen：addr所指向结构体的长度，通常使用 sizeof()计算
 ```
 - 监听连接：使用listen()开启监听，设置最大连接队列
-```
+```c
 listen(sockfd, 5);
 
 // 函数原型：
@@ -73,7 +73,7 @@ sockfd：已由 socket()创建并成功通过 bind()绑定到本地地址的套�
 backlog：定义内核为此套接字维护的已完成连接队列（已完成三次握手）的最大长度。当队列满时，新的连接请求可能会被拒绝，客户端收到错误。某些系统也允许此参数影响未完成连接队列（未完成三次握手）的大小。可将此参数设置为 SOMAXCONN，让系统自动选择一个合理的较大值
 ```
 - 接受连接：调用accept()阻塞等待客户端连接，返回新的 socket 用于通信。
-```
+```c
 struct sockaddr_in client_addr;
 socklen_t client_len = sizeof(client_addr);
 int new_sockfd = accept(sockfd, (struct sockaddr*)&client_addr, &client_len); // new_sockfd用于与此客户端通信
@@ -90,7 +90,7 @@ addr：（可选）指向 sockaddr 结构体的指针，用于存储发起连接
 addrlen：（输入输出参数）调用时指定 addr指向缓冲区的长度；返回时被设置为客户端地址的实际长度。如果 addr为 NULL，此参数也应设为 NULL
 ```
 - 数据收发：使用send()和recv()进行数据传输。
-```
+```c
 // 发送数据
 send(sockfd, buffer, data_len, 0);
 
@@ -121,21 +121,21 @@ MSG_DONTWAIT：同上，用于接收
 MSG_WAITALL：要求函数阻塞，直到收满请求的 len字节数据后才返回
 MSG_OOB：同上，用于接收带外数据
 ```
-非阻塞I/O下失败后的行为：
+**非阻塞I/O下失败后的行为**：
 非阻塞I/O在失败时，系统不会将该进程挂起，而是继续执行，此时若向重试失败的I/O操作，有两种方法：  
 1. 循环重试，直至成功为止，这样会白白消耗CPU资源，效率极低
 2. 等待通知，等待一个明确的信号，告诉套接字已经准备好重新I/O，这个等待和通知机制的实现就是I/O多路复用技术提供的
 
 
 - 关闭 socket：通信结束后关闭连接。
-```
+```c
 close()(Linux)
 closesocket()(Windows) 
 ```
 
 #### 客户端额外操作
 - 发起连接
-```
+```c
 struct sockaddr_in serv_addr;
 serv_addr.sin_family = AF_INET;
 serv_addr.sin_port = htons(8080);
