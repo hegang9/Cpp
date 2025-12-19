@@ -1,17 +1,11 @@
-﻿#include <iostream>
-#include <string>
-#include <vector>
-#include <algorithm>
+﻿#include <stdio.h>
 using namespace std;
 
 int main()
 {
-	vector<int> numbers{1, 2, 3, 4, 5};
-	sort(numbers.rbegin(), numbers.rend());
-	for (const auto &num : numbers)
-	{
-		cout << num << " ";
-	}
-	cout << endl;
+	int a = 0, b = 0;
+	a = 10;
+	b = 20;
+	printf("a+b=%d\n", a + b);
 	return 0;
 }

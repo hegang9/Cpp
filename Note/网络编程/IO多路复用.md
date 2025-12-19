@@ -24,7 +24,7 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struc
   - 等于0：在超时时间内，没有描述符就绪
   - -1：调用失败并设置errno
 
-### 1.3fd_set
+### 1.3 fd_set
 fd_set是一个位图（bit mask），用二进制位来表示文件描述符是否在集合中。由于它是输入输出型参数，并且 select调用返回后内核会修改其内容，因此在每次调用 select前，都**必须重新设置**我们关心的描述符集合，因此必需一个副本fd_set用于重置fd_set。
 
 ### 1.4 底层细节
