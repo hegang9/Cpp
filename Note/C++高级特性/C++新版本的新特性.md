@@ -31,18 +31,77 @@ C++98是1998年发布的第一个ISO标准C++版本，由Bjarne Stroustrup和Mar
 **语言层面**：
 - 自动类型推导：auto关键字让编译器自动推断变量类型，特别适用于复杂迭代器和模板返回值  
 - Lambda表达式：支持匿名函数对象，简化回调和函数对象编写  
-- 右值引用与移动语义：int&&表示临时对象，配合std::move实现资源"窃取"，避免深拷贝  
+- 右值引用与移动语义：int&&表示临时对象，配合std::move实现资源"窃取"，避免深拷贝
+- 完美转发
 - nullptr：替代NULL，提供更安全的空指针表示  
 - 委托构造函数：允许一个构造函数调用同类的另一个构造函数  
 - 用户定义字面量：允许自定义字面量后缀和前缀  
 - 尾置返回类型：简化模板函数返回类型的声明  
 - noexcept指定符：明确函数是否抛出异常  
 - 静态断言：static_assert提供编译期断言  
-- 范围-based for循环：for(auto& item : container)简化容器遍历  
+- 范围for循环：for(auto& item : container)简化容器遍历  
 - 非静态数据成员初始化：允许类成员在声明时直接初始化  
 - 字符类型扩展：char16_t和char32_t支持Unicode字符  
 - 原始字符串字面量：R"(...)"语法支持多行字符串和转义字符  
-- 内联命名空间：inline namespace简化命名空间合并  
+- 内联命名空间：inline namespace简化命名空间合并
+- 统一初始化语法：{}列表初始化与初始化列表
+- 强类型枚举：enum class Color{Red,Green,Blue}，传统枚举成员直接暴露在外围作用域，且可隐式转换为整数，底层类型由编译器决定。强类型枚举的枚举成员限定在枚举类的作用域内，只能通过 Color::Red 访问；且禁止隐式转换，可显式指定底层类型，支持前置声明：
+    ```c
+    #include <cstdint>
+    enum class Priority : uint8_t { LOW, MEDIUM, HIGH };
+    ```
+    ```c
+    // header.h
+    enum class LogLevel : int; // 前置声明
+
+    void logMessage(LogLevel level); // 使用前置声明
+
+    // source.cpp
+    enum class LogLevel : int { DEBUG, INFO, WARNING, ERROR };
+    ```
+- 默认和删除函数
+- 继承构造函数：在C++中，派生类通常不会继承基类的构造函数。这意味着，即使派生类没有添加新的数据成员，你也需要重新定义构造函数来调用基类的构造函数。这会导致代码重复，尤其是在基类有多个构造函数时。C++11引入了继承构造函数的概念，通过使用using Base::Base;，派生类可以自动继承基类的所有构造函数（除了那些与派生类中定义的构造函数签名相同的）：
+    ```c
+    class Base {
+    public:
+        Base(int x) : x_(x) {}
+        Base(int x, int y) : x_(x), y_(y) {}
+    
+    private:
+        int x_, y_;
+    };
+    class Derived : public Base {
+    public:
+        using Base::Base; // 继承所有构造函数
+        // 相当于：
+        // Derived(int x) : Base(x) {}
+        // Derived(int x, int y) : Base(x, y) {}
+    };
+    ```
+- 变长参数模板：一个模板即可处理所有情况，代码高度通用，核心机制为参数包、递归展开、折叠表达式
+    ```c
+    // 函数模板
+    template<typename... Args>
+    void func(Args... args) { /* ... */ }
+
+    // 类模板
+    template<typename... Types>
+    class MyTuple { /* ... */ };
+
+    // 1. 终止递归函数（处理空参数包的情况）
+    void print() {
+        std::cout << "End\n";
+    }
+
+    // 2. 递归函数模板
+    template<typename T, typename... Rest>
+    void print(T first, Rest... rest) {
+        std::cout << first << " ";
+        print(rest...); // 递归调用，展开剩余参数包
+    }
+    ```
+- 原子操作atomic与内存序
+- 正则表达式
 
 **标准库层面**：
 - 智能指针：std::unique_ptr(独占所有权)、std::shared_ptr(共享所有权)和std::weak_ptr(观察者所有权)  
@@ -62,14 +121,23 @@ C++98是1998年发布的第一个ISO标准C++版本，由Bjarne Stroustrup和Mar
 **C++14(2014年8月批准，12月发布)**是对C++11的补充和优化，属于小幅度迭代更新，主要解决C++11中的一些限制和提供更灵活的语法  ：
 
 **语言层面**：
-- 泛型Lambda：允许Lambda参数使用auto，实现泛型匿名函数  
+- 泛型Lambda：允许Lambda参数和返回值使用auto，实现泛型匿名函数  
 - 函数返回类型推导：非模板函数可以使用auto作为返回类型  
 - decltype(auto)：结合decltype和auto的推导规则，保留表达式的值类别  
 - 二进制字面量：0b前缀表示二进制数  
-- 数字分隔符：单引号'作为数字分隔符，提高可读性  
+- 数字分隔符：单引号'作为数字分隔符，提高可读性，int million = 1'000'000
 - [[deprecated]]属性：标记过时实体，提供编译警告  
 - 放宽constexpr函数限制：允许在constexpr函数中使用循环和条件语句  
 - Lambda捕获初始化：允许在捕获列表中初始化被捕获的变量  
+- 变量模板：
+    ```c
+    template<typename T>
+    constexpr T pi = T(3.1415926535897932385);
+    // 使用,可满足不同精度要求
+    float f = pi<float>;
+    double d = pi<double>;
+    long double ld = pi<long double>;
+    ```
 
 **标准库层面**：
 - std::make_unique：安全创建std::unique_ptr，避免异常安全问题  
@@ -87,11 +155,11 @@ C++98是1998年发布的第一个ISO标准C++版本，由Bjarne Stroustrup和Mar
 **C++17(2017年发布)**进一步提升了语言功能和易用性，引入了多项增强编译期计算能力和简化语法的特性  ：
 
 **语言层面**：
-- 结构化绑定：auto [x, y] = pair;简化多返回值的处理  
+- 结构化绑定：auto [x, y] = pair;简化多返回值的处理，类似Python
 - if/switch初始化语句：允许在条件语句前初始化变量  
 - class模板参数推导：CTAD允许编译器自动推导类模板参数  
 - 内联变量：inline变量允许在多个翻译单元中定义  
--UTF-8字符字面量：支持原始UTF-8编码的字符串  
+- UTF-8字符字面量：支持原始UTF-8编码的字符串  
 - if constexpr：编译期条件分支，提高模板代码可读性  
 - 嵌套命名空间：允许命名空间嵌套，简化代码组织  
 - 委托构造函数扩展：允许更灵活的构造函数委托  
@@ -100,7 +168,29 @@ C++98是1998年发布的第一个ISO标准C++版本，由Bjarne Stroustrup和Mar
 - 委托构造函数扩展：允许更灵活的构造函数委托  
 
 **标准库层面**：
-- std::optional：表示可能存在的值，替代裸指针和返回值检查  
+- std::optional：表示可能存在的值，替代裸指针和返回值检查
+    ```c
+    #include <optional>
+    std::optional<int> divide(int a, int b) {
+        if (b == 0) {
+            return std::nullopt; // 无值
+        }
+        return a / b; // 有值
+    }
+    // 使用
+    auto result = divide(10, 2);
+    if (result.has_value()) {
+        std::cout << "Result: " << result.value() << std::endl;
+    } else {
+        std::cout << "Division by zero!" << std::endl;
+    }
+    // 使用value_or提供默认值
+    int value = result.value_or(-1);
+    // 使用->操作符
+    if (result) {
+        std::cout << "Result: " << *result << std::endl;
+    }
+    ```
 - std::variant：表示多种可能的类型，替代联合体和类型检查  
 - std::any：表示任意类型，替代void*和类型检查  
 - 并行算法：约80个STL算法支持执行策略执行，如std::execution::par  
