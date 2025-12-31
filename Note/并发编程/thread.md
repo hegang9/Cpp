@@ -39,3 +39,7 @@ std::thread t (&X::do_lengthy_work, &my_x);
 
 #### std::thread::hardware_ concurrency()获取真正并发的线程数量
 在多核系统上，该值可能就是 CPU 的核芯数量。若信息无法获取，该函数则可能返回 0。
+
+#### 识别线程
+线程 ID 所属型别是std::thread::id,可调用get_id()成员函数获取。若当前thread对象没有关联线程，对其调用get_id()会返回一个ID，它按默认构造生成，表示线程不存在。</br>
+获取std::thread::id还有一种方式，std::this_thread::get_id()自由函数，获取自身线程ID。
