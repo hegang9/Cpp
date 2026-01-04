@@ -67,6 +67,23 @@ C++20引入，协程是一种轻量级的并发模型，允许在单个线程中
 - **`co_yield expr`**: 等价于 `co_await promise.yield_value(expr)`。用于生成值并挂起。
 - **`co_return [expr]`**: 结束协程。调用 `promise.return_value(expr)` 或 `promise.return_void()`，然后跳转到 `final_suspend`。
 
+#### 如何定义一个协程函数
+
+在 C++20 中，并没有特定的关键字（如 `async` 或 `coroutine`）来声明一个函数是协程。**只要一个函数体内包含了以下三个关键字之一，编译器就会将其视为协程：**
+
+1.  `co_await`
+2.  `co_yield`
+3.  `co_return`
+
+**协程函数的限制：**
+
+| 限制项 | 说明 |
+| :--- | :--- |
+| **不能使用 `return`** | 协程必须使用 `co_return` 来结束执行或返回值。混合使用 `return` 会导致编译错误。 |
+| **不能使用变长参数** | 如 `void func(int count, ...)` 是不允许的。 |
+| **特殊函数限制** | `main` 函数、构造函数、析构函数、`constexpr` 函数不能是协程。 |
+| **返回类型要求** | 协程的返回类型必须满足特定条件（通常是一个类，且内部定义了 `promise_type`）。 |
+
 #### 代码示例：简单的生成器 (Generator)
 
 这是一个简单的生成器示例，展示了如何定义 `promise_type` 和使用 `co_yield`。
