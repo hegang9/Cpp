@@ -1,0 +1,71 @@
+### vector底层实现原理
+vector的本质是一段连续动态分配的内存数组，其状态由**栈上的**三个核心指针管理：
+- _start：指向已使用的内存块的起始位置，即begin()和data()
+- _finish：指向最后一个有效元素的下一个位置，即end()和size()= _finish - _start
+- _end_of_storage：指向整个动态分配的内存块的末尾，即capacity()
+
+这样设计的优势：通过简单的指针减法就能在O(1)常数时间内计算出size()和capasity()
+
+### 扩容机制与对比
+- vector和array的区别：
+vector分配在堆上，array分配在栈上
+
+- vector扩容机制：
+在size>=capacity时会触发扩容，分配新的连续内存块，扩容策略视编译器情况而不同，**GCC/Clang通常两倍，MSVC通常1.5倍**（1.5 倍策略在多次扩容后，新内存块大小可能小于之前释放的所有旧内存块之和，从而有机会复用旧内存，减少内存碎片；而2倍扩容可以减少扩容频率）。接着迁移元素至新内存块，“迁移”有两层含义：1、若对象实现了移动构造函数，编译器会优先使用移动操作，这比拷贝高效的多；否则使用拷贝复制进行迁移；迁移后先调用析构函数将旧对象释放销毁，再释放旧内存块。
+
+- 警示：如果元素类型不支持移动构造且不支持深拷贝，那么使用浅拷贝迁移对象会导致双重释放和悬空指针的未定义行为，造成资源泄漏
+
+- push_back 和 emplace_back的区别：
+1. 参数不同：push_back接收参数为类型对象，若是左值，使用复制构造函数复制到容器中；若是右值，使用移动构造函数移动到容器中。emplace_back接收参数；构造对象的参数列表，通过完美转发再容器内存中原地构造对象
+2. 性能开销：push_back可能会进行临时对象的构造和销毁，引入时间开销，特别是在对象构造和析构成本较高时，所以时间性能：emplace_back > push_back
+3. 特殊性质：emplace_back能够完美转发参数，这意味着参数的值类别（左值、右值）会被保留，这对于需要区分处理左值和右值的构造函数特别有用。
+
+
+#### vector常用的成员函数：
+- iterator begin() noexcept; 返回指向容器第一个元素的迭代器
+- iterator end() noexcept; 返回指向容器最后一个元素之后位置的迭代器
+- bool empty() const noexcept; 检查容器是否为空，若为空返回 true，否则返回 false
+- size_type size() const noexcept; 返回容器中当前元素的数量
+- size_type capacity() const noexcept; 返回容器在不重新分配内存的情况下可以容纳的元素数量
+- void reserve(size_type new_cap); 请求容器预留至少能容纳 new_cap 个元素的内存空间
+- void resize(size_type count); 改变容器的大小为 count，若扩大则默认构造新元素，若缩小则截断
+- void shrink_to_fit(); 请求移除未使用的容量，使 capacity() 适应 size()
+- reference operator[](size_type pos); 返回位置 pos 处元素的引用，不进行边界检查
+- reference at(size_type pos); 返回位置 pos 处元素的引用，进行边界检查，越界抛出 std::out_of_range 异常
+- reference front(); 返回容器第一个元素的引用
+- reference back(); 返回容器最后一个元素的引用
+- T* data() noexcept; 返回指向容器底层数组首元素的指针
+- void push_back(const T& value); 将元素 value 的副本添加到容器末尾
+- void pop_back(); 移除容器末尾的元素
+- iterator insert(const_iterator pos, const T& value); 在 pos 指定的位置前插入元素 value，返回指向新插入元素的迭代器
+- iterator erase(const_iterator pos); 移除 pos 指定位置的元素，返回指向被移除元素之后元素的迭代器
+- void clear() noexcept; 移除容器中的所有元素，size() 变为 0
+- void swap(vector& other) noexcept; 交换两个 vector 的内容，效率高（常数时间）
+- template<class... Args> reference emplace_back(Args&&... args); 在容器末尾原地构造元素，参数 args 被转发给构造函数
+- template<class... Args> iterator emplace(const_iterator pos, Args&&... args); 在 pos 指定的位置前原地构造元素，返回指向新元素的迭代器
+- void assign(size_type count, const T& value); 将容器内容替换为 count 个 value 的副本
+- template<class InputIt> void assign(InputIt first, InputIt last); 将容器内容替换为范围 [first, last) 中的元素
+- void assign(std::initializer_list<T> ilist); 将容器内容替换为初始化列表 ilist 中的元素
+- size_type max_size() const noexcept; 返回容器由于系统或库的限制所能容纳的最大元素数量
+- const_iterator cbegin() const noexcept; 返回指向容器第一个元素的常量迭代器
+- const_iterator cend() const noexcept; 返回指向容器最后一个元素之后位置的常量迭代器
+- reverse_iterator rbegin() noexcept; 返回指向容器最后一个元素的逆向迭代器
+- reverse_iterator rend() noexcept; 返回指向容器第一个元素之前位置的逆向迭代器
+- const_reverse_iterator crbegin() const noexcept; 返回指向容器最后一个元素的常量逆向迭代器
+- const_reverse_iterator crend() const noexcept; 返回指向容器第一个元素之前位置的常量逆向迭代器
+
+
+#### 常与vector数组合作使用的函数（需包含 <algorithm> 或 <numeric>）：
+- void sort(RandomIt first, RandomIt last); 对范围 [first, last) 内的元素进行升序排序
+- void sort(RandomIt first, RandomIt last, Compare comp); 使用自定义比较函数 comp 对范围 [first, last) 内的元素进行排序
+- void reverse(BidirectionalIt first, BidirectionalIt last); 反转范围 [first, last) 内元素的顺序
+- InputIt find(InputIt first, InputIt last, const T& value); 在范围 [first, last) 中查找等于 value 的第一个元素
+- InputIt find_if(InputIt first, InputIt last, UnaryPredicate p); 在范围 [first, last) 中查找满足谓词 p 的第一个元素
+- typename iterator_traits<InputIt>::difference_type count(InputIt first, InputIt last, const T& value); 统计范围 [first, last) 中等于 value 的元素个数
+- typename iterator_traits<InputIt>::difference_type count_if(InputIt first, InputIt last, UnaryPredicate p); 统计范围 [first, last) 中满足谓词 p 的元素个数
+- UnaryFunction for_each(InputIt first, InputIt last, UnaryFunction f); 对范围 [first, last) 中的每个元素应用函数 f
+- OutputIt transform(InputIt first1, InputIt last1, OutputIt d_first, - - UnaryOperation unary_op); 对范围 [first1, last1) 中的每个元素应用 unary_op，并将结果存入从 d_first 开始的范围
+- ForwardIt remove(ForwardIt first, ForwardIt last, const T& value); 移除范围 [first, last) 中所有等于 value 的元素（逻辑移除，需配合 erase 使用）
+- ForwardIt remove_if(ForwardIt first, ForwardIt last, UnaryPredicate p); 移除范围 [first, last) 中所有满足谓词 p 的元素（逻辑移除，需配合 erase 使用）
+- ForwardIt unique(ForwardIt first, ForwardIt last); 移除范围 [first, last) 中连续重复的元素（逻辑移除，需配合 erase 使用）
+- T accumulate(InputIt first, InputIt last, T init); 计算范围 [first, last) 中所有元素的和（需包含 <numeric> 头文件），初始值为 init
