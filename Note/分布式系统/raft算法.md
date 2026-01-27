@@ -244,3 +244,46 @@ C<sub>old,new</sub>和 C<sub>new</sub> 将配置信息作为一个日志体，�
 Raft不允许日志空洞，Paxos允许，Raft的性能没有Paxos好；但是大多数系统实现是无法达到raft的上限的，所以暂时无需担心raft本身的瓶颈。
 
 ## Raft允许日志空洞的改造版本——ParallelRaft
+#### Raft的两点限制：
+1. log复制的顺序性：Raft的follower如果接收了一个日志，意味着它具有这个日志之前的所有日志，并且和leader完全一样。
+2. log提交（应用）的顺序性：Rat的任何节点一旦提交了一个日志，意味着它已经提交了之前的所有日志。
+
+ParallelRaft就打破了这两点规则，实现对日志的乱序确认和乱序提交，以满足现代系统对于并发性的要求。
+
+#### 乱序确认与乱序提交：
+- 乱序确认（Out-of-Order Acknowledge):ParallelRaft中，任何log成功持久化后立即返回 success,无需等待前序日志复制完成，从而大大降低系统的平均延迟。
+- 乱序提交(Out-of-Order Commit):ParallelRaft中，leader在收到大多数节点的复制成功信息后，无需等待前序日志提交，即可提交当前日志。
+
+#### look behind buffer机制：
+为了避免乱序提交带来的“**旧数据覆盖新数据**”的问题，引入一种look behind buffer的数据结构，ParallelRaft的每个log都附带有一个look behind buffer。look behind buffer存放了前N个log修改的**LBA(逻辑块地址)**信息。当一个Follower节点收到一条日志（索引为i）并准备将其应用到状态机时，即便i之前的某些日志还没有收到，即形成了日志空洞，它也可以进行检查：
+
+节点会查看日志 i 附带的 look behind buffer，检查它计划修改的数据范围是否与 buffer 中记录的、位于它之前的 N 条日志的修改范围是否有重叠。若有重叠，说明有冲突，那么这条日志条目会被放入一个**pending队列**暂存，直到与他发生冲突的所有前置日志都成功应用后再执行。
+
+#### Leader Candidate机制：
+日志空洞会有一个直接影响：怎样选举出具有完整日志的Leader？ParallelRaft把选出来的主节点定义为Leader Candidate,Leader Candidate.只有经过一个**Mergel**阶段，**弥补完所有日志空洞**后才能开始接收并复制日志。其选举规则与Raft略有差异：
+
+ParallelRaft在选举阶段会选择具有最新**checkpoint**的状态机的节点当选Leader Candidate。
+
+#### Merge阶段：
+Merge阶段总体流程：
+1. Follower Candidate发送自己的日志（应该是checkpoint之后的所有日志）给Leader Candidate。 Leader Candidate 把自己的日志与收到的日志进行Merge；
+2. Leader Candidate同步状态信息（推测应该是具体选择哪些log）给Follower；
+3. Leader Candidate提交所有日志并通知Follower Candidate提交；
+4. Leader Candidate升级为Leader,并开始自己任期内的服务。
+
+我们把所有日志分为3类：
+1. 已经提交的日志：一定要在Leader Candidate上补上空洞并提交；对于索引相同但任期号不同的日志条目，要选择任期号最大的那个；
+2. 未提交的日志（在任何节点上都未提交过，或确定在大多数节点上都没有的日志（拥有这个日志的节点数+宕机的节点数<不包含这个日志的节点数））：这类日志若Leader Candidate上没有，就可以用空日志替代；
+3. 不确定是否提交的日志（拥有这个日志的节点数+宕机的节点数 >= 不包含这个日志的节点数）：为了保证安全，Leader Candidate要提交这个日志。
+
+Merge阶段的引入导致选举的代价变得很大，但是选举不经常发生，所以性能消耗在可接受范围内。
+
+#### checkpoint：
+ParallelRaft的checkpoint就是**状态机的一个快照**。在实际实现中，ParallelRaft会选择有最新 checkpoint的节点做 Leader Candidate,而不是拥有最新日志的节点，有两个原因：
+1. Merge阶段时，Leader Candidate可以从其它节点获取最新的日志，并且无需处理checkpoint:之前的日志。所以**checkpoint越新，Merge阶段的代价就越小**。
+2. Leader的checkpoint越新，catch up时就更高效。
+
+#### catch up机制：
+ParallelRaft:把落后的Follower 追上Leader的过程称为catch up,有两种类型：
+ 1. fast-catch-up:Follower和Leader差距较小时（差距小于上一个checkpoint）,仅同步日志。 
+ 2. streaming-catch-up:Follower和Leader差距较大时（差距大于上一个checkpoint）,同步 checkpoint 和日志。
