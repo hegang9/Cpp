@@ -22,7 +22,7 @@ Raft实现了一种心跳机制，Leader通过发送心跳来告知所有Followe
 #### 选举：
 
 1. 所有节点初始化都为Follower，通过心跳机制去判断有无Leader，若心跳机制超时，代表没有Leader，则该节点先增加自己的当前任期号，并将自己变为Candidate。
-2. 成为Candidate的节点首先投票给自己，再向其他Follower发起投票请求（即后述RequestVote RPC），多个Candidate通过随机事件来避免同时选票，当某个Candidate获得的票数**超过节点数的一半**时成为Leader。
+2. 成为Candidate的节点首先投票给自己，再向其他 Follower 发起投票请求（即后述RequestVote RPC），多个Candidate通过随机事件来避免同时选票，当某个Candidate获得的票数**超过节点数的一半**时成为Leader。
 3. 成为Leader的节点开始日志同步、日志提交等操作，并发送心跳给所有Follower。
 4. 收到新Leader心跳的Candidate会检查新Leader的任期号，如果新Leader的任期号不小于自己的任期号（正常情况下是相等），则拥护新Leader，将自己降为Follower。
 
