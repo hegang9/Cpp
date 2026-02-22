@@ -1,3 +1,34 @@
+
+---
+
+### thread_local何时会发生内存泄漏？如何清理？
+
+**Q1: thread_local在什么时候会发生内存泄漏？**
+
+- 当thread_local变量指向动态分配的内存（如new/malloc），但未在线程结束前主动释放，或未正确设置析构函数，线程退出后这块内存无法回收，导致泄漏。
+- 在Linux pthread实现中，如果thread_local变量是指针类型，且未通过pthread_key_create注册析构函数，线程结束时不会自动释放指针指向的内存。
+- 静态thread_local对象的析构函数只会在线程退出时自动调用，若thread_local变量是指针，需手动管理其指向的资源。
+
+**Q2: 如何清理thread_local变量？**
+
+- 对于thread_local对象，确保其析构函数能正确释放资源，线程退出时会自动调用。
+- 对于thread_local指针，建议：
+	- 使用智能指针（如std::unique_ptr）管理，自动释放。
+	- 或在pthread_key_create时注册析构函数，线程退出时自动回收。
+- 若需手动清理，可在线程结束前显式delete/free。
+- 避免跨线程传递thread_local变量的地址，否则无法正确回收。
+
+**示例：thread_local指针自动清理**
+```cpp
+thread_local std::unique_ptr<MyObj> obj(new MyObj()); // 智能指针自动释放
+```
+或
+```cpp
+pthread_key_t key;
+pthread_key_create(&key, my_destructor); // 注册析构函数
+pthread_setspecific(key, ptr); // 设置线程局部数据
+```
+---
 ### thread_local
 - 定义：thread_local是 C++11 引入的一个强大的存储期说明符，用于实现线程局部存储（Thread-Local Storage, TLS）
 
