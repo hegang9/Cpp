@@ -5,7 +5,7 @@
 // 进阶版的 memcpy 实现，考虑了内存对齐、块复制和重叠问题，以提高效率和安全性。
 
 // 使用块复制来提高效率,同时需要处理源和目标内存区域重叠问题
-void* memcpy(void* dest,const void* src,size_t n){
+void* memmove(void* dest,const void* src,size_t n){
     // 输入检查
     if(dest == nullptr || src == nullptr || n == 0){
         return dest;
