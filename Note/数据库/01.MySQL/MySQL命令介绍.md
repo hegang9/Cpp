@@ -217,34 +217,52 @@ LEFT JOIN orders o ON u.id = o.user_id;
 ---
 
 ### 四、 DCL (数据控制语言)
-DCL 主要用于管理数据库的访问权限控制，通常由 DBA 管理员操作。
+DCL 主要用于管理数据库的用户账号及其访问权限控制，通常由 DBA 管理员操作。
 
 | 命令 | 功能说明 |
 | :--- | :--- |
+| `CREATE USER` | 创建新的数据库用户账号 |
+| `ALTER USER` | 修改用户账号信息（如修改密码） |
+| `DROP USER` | 删除数据库用户账号 |
 | `GRANT` | 赋予账号特定的权限 |
 | `REVOKE` | 撤销账号特定的权限 |
 
-#### 1. 管理账号权限示例
+> **关于用户的说明：** MySQL 中的用户由 **用户名** 和 **主机名** 共同组成，格式为 `'username'@'hostname'`。
+> - `localhost` 表示只允许从本地登录。
+> - `%` 表示允许从任意远程主机登录。
+
+#### 1. 用户管理示例
 ```sql
--- 创建新用户 (允许在本地 localhost 环境登录)
-CREATE USER 'dev_user'@'localhost' IDENTIFIED BY 'password123';
--- 允许任意远程环境登录
-CREATE USER 'dev_user'@'%' IDENTIFIED BY 'password123'; 
+-- 查询全部现有用户 (用户信息存储在系统自带的 mysql 库下的 user 表中)
+SELECT Host, User FROM mysql.user;
+
+-- 创建新用户
+CREATE USER 'dev_user'@'localhost' IDENTIFIED BY 'password123'; -- 仅限本地登录
+CREATE USER 'dev_user'@'%' IDENTIFIED BY 'password123';         -- 允许任意远程环境登录
+
+-- 修改用户密码 (以 MySQL 8.0+ 为例)
+ALTER USER 'dev_user'@'localhost' IDENTIFIED BY 'new_password456';
+
+-- 删除指定用户
+DROP USER 'dev_user'@'localhost';
+```
+
+#### 2. 权限管理示例
+```sql
+-- 查看某个账号当前的权限
+SHOW GRANTS FOR 'dev_user'@'%';
 
 -- 授予权限：给 dev_user 分配 my_test_db 库下所有表增删改查权限
-GRANT SELECT, INSERT, UPDATE, DELETE ON my_test_db.* TO 'dev_user'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE ON my_test_db.* TO 'dev_user'@'%';
 
 -- 授予全部最高权限 (*.* 代表所有的数据库的所有表)
 GRANT ALL PRIVILEGES ON *.* TO 'dev_user'@'%';
 
 -- 撤销删除权限
-REVOKE DELETE ON my_test_db.* FROM 'dev_user'@'localhost';
+REVOKE DELETE ON my_test_db.* FROM 'dev_user'@'%';
 
--- 刷新权限 (使得以上相关的权限改动操作立即刻在内存生效)
+-- 刷新权限 (使得以上相关的权限改动操作立即生效)
 FLUSH PRIVILEGES;
-
--- 删除指定用户
-DROP USER 'dev_user'@'localhost';
 ```
 
 ---
