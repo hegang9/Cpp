@@ -56,3 +56,71 @@ void writer(int value) {
 ## 结论
 - STL 容器本身不提供线程安全保证
 - 并发访问必须通过**外部同步**或**线程隔离**保证正确性
+
+###  如何实现线程安全的容器访问
+- **互斥锁（Mutex）**：使用 `std::mutex` 或 `std::shared_mutex` 来保护容器的访问，确保同一时间只有一个线程可以修改容器。
+- 代码示例（封装一个线程安全的 Vector Wrapper）：
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <mutex>
+#include <thread>
+
+template<typename T>
+class ThreadSafeVector {
+private:
+    std::vector<T> data;
+    mutable std::mutex mtx; // 声明为 mutable 以便在 const 成员函数中获得锁
+
+public:
+    // 线程安全的追加操作
+    void push_back(const T& value) {
+        std::lock_guard<std::mutex> lock(mtx);
+        data.push_back(value);
+    }
+
+    // 线程安全的获取大小
+    size_t size() const {
+        std::lock_guard<std::mutex> lock(mtx);
+        return data.size();
+    }
+
+    // 线程安全地获取内部数据的副本，供安全读取
+    std::vector<T> get_copy() const {
+        std::lock_guard<std::mutex> lock(mtx);
+        return data; 
+    }
+    
+    // 注意：不能直接返回 T& 或迭代器，否则调用者在外部使用指针或引用时，锁已经释放，会造成新的数据竞争。
+};
+
+void worker(ThreadSafeVector<int>& ts_vec, int id) {
+    for (int i = 0; i < 5; ++i) {
+        ts_vec.push_back(id * 10 + i);
+    }
+}
+
+int main() {
+    ThreadSafeVector<int> ts_vec;
+    
+    // 启动两个线程，并发地向容器写入数据
+    std::thread t1(worker, std::ref(ts_vec), 1);
+    std::thread t2(worker, std::ref(ts_vec), 2);
+
+    t1.join();
+    t2.join();
+
+    std::cout << "Final vector size: " << ts_vec.size() << std::endl;
+    
+    // 安全地遍历（通过读取副本）
+    std::vector<int> result = ts_vec.get_copy();
+    for (int v : result) {
+        std::cout << v << " ";
+    }
+    std::cout << "\n";
+
+    return 0;
+}
+```
+
