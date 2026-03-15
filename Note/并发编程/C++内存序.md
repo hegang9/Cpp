@@ -57,6 +57,35 @@ C++11 在 `<atomic>` 头文件中定义了 6 种内存序（`std::memory_order`�
 - **特点**：**C++ `std::atomic` 操作缺省的默认内存序**。最严格的内存序，不仅具有 Acquire-Release 的所有同步保证，还额外保证**所有具有该内存序的原子操作在这个程序的所有线程看来，都有一个完全相同的全局顺序**。它解决了“多个观察者（线程）对多个独立原子事件的发生顺序，产生认知分歧”的问题。
 - **代价**：在某些弱内存模型架构（如 ARM、PowerPC）上需要插入极重的全内存屏障（Full Memory Barrier）指令，性能损耗较大；在 x86 上代价相对较小（因为 x86 本身就是强内存模型），但也会阻止 store buffer 的优化等。
 - **适用场景**：默认选项。如果对无锁编程没有极高的要求，默认使用它最安全。
+```cpp
+#include <atomic>
+#include <cassert>
+
+std::atomic<bool> X{false};
+std::atomic<bool> Y{false};
+int Z = 0;
+
+void thread1() {
+    X.store(true, /* 如果不是 seq_cst 怎么办？*/);     // 动作 A
+    if (Y.load(/* 如果不是 seq_cst 怎么办？*/))        // 动作 B
+        Z++;
+}
+
+void thread2() {
+    Y.store(true, /* 如果不是 seq_cst 怎么办？*/);     // 动作 C
+    if (X.load(/* 如果不是 seq_cst 怎么办？*/))        // 动作 D
+        Z++;
+}
+
+// 假设我们最终执行完这两个线程之后...
+// 断言：Z 有可能等于 0 吗？
+```
+
+- 线程 1 认为：“我已经把 X 写入缓存了（发出了 Boss 1 死了的广播），然后我去读 Y，Y 还是 false。”
+- 线程 2 认为：“我已经把 Y 写入缓存了（发出了 Boss 2 死了的广播），然后我去读 X，X 还是 false。”
+- 在线程 1 眼里：发生顺序是 A -> B -> C -> D。
+- 在线程 2 眼里：发生顺序是 C -> D -> A -> B。
+- 大家都觉得自己先跑了一步，这就是所谓的“各线程看到的顺序不一致”。最终导致谁都没读到对方的标志位，Z 变成了 0
 
 ### 4. 消费内存模型（Consume Ordering / 罕见）
 - **枚举值**：`std::memory_order_consume`
