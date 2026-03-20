@@ -52,3 +52,22 @@ std::thread t (&X::do_lengthy_work, &my_x);
 5. 读写锁：允许并发读，互斥写
 6. 自旋锁：在获取锁之前会不断循环检查锁是否可用，避免上下文切换带来的开销，但是自旋锁所在的线程会一直占用CPU资源
 7. 原子操作：在单个CPU指令中完成数据的读取和修改，避免竞争条件
+
+## 线程操作 (std::this_thread)
+C++标准库在 `<thread>` 头文件中提供了 `std::this_thread` 命名空间，包含了几个用于控制当前线程行为的自由函数： 
+
+1. **`std::this_thread::yield()`**
+   - **作用**：主动让出当前线程的CPU时间片，允许操作系统调度其他处于就绪状态的线程。
+   - **使用场景**：常用于无锁编程或自旋等待（Spin Wait）中。如果线程当前等待的条件未满足而需要继续轮询，调用 `yield()` 可以避免 `while` 死循环白白耗尽 100% 的 CPU 资源，从而提升系统整体并发效率。
+
+2. **`std::this_thread::sleep_for(const std::chrono::duration& rel_time)`**
+   - **作用**：使当前执行的线程阻塞（休眠）一段指定的相对时间。
+   - **使用场景**：定时任务、或者是简单的轮询间隔。需要配合 `std::chrono` 时间库进行使用。例如休眠 100 毫秒：`std::this_thread::sleep_for(std::chrono::milliseconds(100));`。
+
+3. **`std::this_thread::sleep_until(const std::chrono::time_point& abs_time)`**
+   - **作用**：使当前线程阻塞，直到达到指定的绝对时间点。
+   - **使用场景**：当需要精准控制线程在未来某个具体时刻自动唤醒时使用。例如：`std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(1));`。
+
+4. **`std::this_thread::get_id()`**
+   - **作用**：获取当前运行环境所在线程的唯一ID（类型为 `std::thread::id`）。
+   - **使用场景**：常用于记录多线程日志、调试程序的运行流向，或者在无锁容器中基于线程 ID 作为某种散列、映射的键使用。
